@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="2026 年国庆清远三日游三种路线对比：地图、交通、项目与优缺点。">
+  <title>清远三日游 · 三种路线对比</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://tile.openstreetmap.org">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg: #f4f6f2;
+      --surface: rgba(255, 255, 255, 0.92);
+      --surface-solid: #ffffff;
+      --text: #17211a;
+      --muted: #66716a;
+      --line: rgba(23, 33, 26, 0.10);
+      --shadow: 0 16px 42px rgba(31, 52, 36, 0.10);
+      --shadow-soft: 0 7px 24px rgba(31, 52, 36, 0.07);
+      --blue: #2477e8;
+      --orange: #ee7d2d;
+      --green: #2f9d69;
+      --red: #d84d45;
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 13px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% -8%, rgba(111, 176, 113, 0.20), transparent 30rem),
+        radial-gradient(circle at 88% 4%, rgba(69, 132, 215, 0.12), transparent 28rem),
+        var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { font: inherit; }
+    a { color: inherit; }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 30px 0 56px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      color: #477055;
+      font-size: 13px;
+      font-weight: 750;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 28px;
+      height: 2px;
+      background: currentColor;
+      border-radius: 99px;
+      content: "";
+    }
+
+    h1 {
+      max-width: 760px;
+      margin: 0;
+      font-size: clamp(34px, 5vw, 62px);
+      line-height: 1.05;
+      letter-spacing: -0.045em;
+    }
+
+    .hero p {
+      max-width: 700px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .date-chip {
+      padding: 12px 16px;
+      border: 1px solid rgba(71, 112, 85, 0.18);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.70);
+      color: #355b42;
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      backdrop-filter: blur(14px);
+    }
+
+    .map-card {
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.84);
+      border-radius: var(--radius-xl);
+      background: var(--surface-solid);
+      box-shadow: var(--shadow);
+    }
+
+    #map {
+      width: 100%;
+      height: min(52vh, 540px);
+      min-height: 360px;
+      background: #dfe8dd;
+    }
+
+    .map-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 13px 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend i {
+      width: 18px;
+      height: 4px;
+      border-radius: 99px;
+      background: var(--legend-color);
+    }
+
+    .map-note { text-align: right; }
+
+    .tabs {
+      position: sticky;
+      top: 10px;
+      z-index: 500;
+      display: flex;
+      gap: 8px;
+      margin: 20px 0;
+      padding: 8px;
+      overflow-x: auto;
+      border: 1px solid rgba(255, 255, 255, 0.86);
+      border-radius: 999px;
+      background: rgba(246, 248, 244, 0.80);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(18px) saturate(160%);
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      flex: 1 0 auto;
+      min-width: max-content;
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 720;
+      transition: transform 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    .tab:hover { color: var(--text); }
+    .tab:active { transform: scale(0.97); }
+    .tab.active {
+      background: #1e2d23;
+      color: white;
+      box-shadow: 0 7px 18px rgba(30, 45, 35, 0.18);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin: 34px 0 14px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.15;
+      letter-spacing: -0.035em;
+    }
+
+    .section-title p {
+      max-width: 600px;
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .route-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .route-card, .panel, .day-card, .verdict {
+      border: 1px solid rgba(255, 255, 255, 0.88);
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(14px);
+    }
+
+    .route-card {
+      position: relative;
+      min-height: 380px;
+      padding: 22px 22px 58px;
+      overflow: hidden;
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .route-card::after {
+      position: absolute;
+      right: -46px;
+      bottom: -58px;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--route-color) 14%, transparent);
+      content: "";
+    }
+
+    .route-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
+
+    .route-number {
+      display: inline-grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border-radius: 11px;
+      background: var(--route-color);
+      color: white;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .route-card h3 {
+      margin: 18px 0 8px;
+      font-size: 21px;
+      line-height: 1.25;
+      letter-spacing: -0.025em;
+    }
+
+    .route-card .tagline {
+      min-height: 44px;
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .route-card ul {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      color: #344039;
+      font-size: 14px;
+    }
+
+    .route-card li {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+
+    .route-card li::before {
+      flex: 0 0 auto;
+      width: 6px;
+      height: 6px;
+      margin-top: 8px;
+      border-radius: 50%;
+      background: var(--route-color);
+      content: "";
+    }
+
+    .route-card .card-action {
+      position: absolute;
+      left: 22px;
+      bottom: 20px;
+      color: var(--route-color);
+      font-size: 13px;
+      font-weight: 780;
+    }
+
+    .decision-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .verdict {
+      padding: 18px;
+      border-radius: var(--radius-md);
+    }
+
+    .verdict strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .verdict span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .plan-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+      gap: 14px;
+    }
+
+    .panel {
+      padding: 22px;
+      border-radius: var(--radius-lg);
+    }
+
+    .plan-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--route-color);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .plan-kicker i {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--route-color);
+    }
+
+    .panel h2 {
+      margin: 10px 0 6px;
+      font-size: clamp(27px, 4vw, 42px);
+      line-height: 1.12;
+      letter-spacing: -0.04em;
+    }
+
+    .panel > p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .route-string {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 22px;
+    }
+
+    .route-string span {
+      padding: 7px 10px;
+      border: 1px solid color-mix(in srgb, var(--route-color) 24%, white);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--route-color) 8%, white);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .route-string b {
+      color: var(--route-color);
+      font-size: 13px;
+    }
+
+    .transport-panel {
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .transport-chain {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      width: 100%;
+      overflow-x: auto;
+      padding: 2px;
+      scrollbar-width: thin;
+    }
+
+    .transport-step {
+      flex: 1 0 138px;
+      min-width: 0;
+      padding: 13px 14px;
+      border: 1px solid color-mix(in srgb, var(--mode-color) 24%, white);
+      border-top: 4px solid var(--mode-color);
+      border-radius: 13px;
+      background: color-mix(in srgb, var(--mode-color) 8%, white);
+    }
+
+    .transport-step-head {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 7px;
+    }
+
+    .transport-icon {
+      display: inline-grid;
+      width: 26px;
+      height: 26px;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--mode-color);
+      color: white;
+      font-size: 14px;
+    }
+
+    .transport-mode {
+      color: var(--mode-color);
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .transport-segment {
+      display: block;
+      color: #27342c;
+      font-size: 13px;
+      font-weight: 750;
+      line-height: 1.35;
+    }
+
+    .transport-detail {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .transport-connector {
+      flex: 0 0 18px;
+      display: grid;
+      place-items: center;
+      color: #9aa39d;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .transport-chain.compact {
+      gap: 5px;
+      margin: 14px 0 12px;
+    }
+
+    .transport-chain.compact .transport-step {
+      flex-basis: 92px;
+      padding: 8px 9px;
+      border-top-width: 3px;
+    }
+
+    .transport-chain.compact .transport-step-head {
+      gap: 5px;
+      margin: 0;
+    }
+
+    .transport-chain.compact .transport-icon {
+      width: 22px;
+      height: 22px;
+      font-size: 12px;
+    }
+
+    .transport-chain.compact .transport-segment,
+    .transport-chain.compact .transport-detail {
+      display: none;
+    }
+
+    .transport-chain.compact .transport-connector {
+      flex-basis: 11px;
+      font-size: 13px;
+    }
+
+    .transport-mode-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .transport-mode-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .transport-mode-legend i {
+      width: 18px;
+      height: 5px;
+      border-radius: 99px;
+      background: var(--mode-color);
+    }
+
+    .metric-list {
+      display: grid;
+      gap: 13px;
+      margin-top: 6px;
+    }
+
+    .metric {
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      gap: 10px;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .metric label { color: var(--muted); }
+
+    .meter {
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e9ece8;
+    }
+
+    .meter i {
+      display: block;
+      width: var(--meter-width);
+      height: 100%;
+      border-radius: inherit;
+      background: var(--route-color);
+    }
+
+    .days {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .day-card {
+      padding: 19px;
+      border-radius: var(--radius-md);
+    }
+
+    .day-label {
+      color: var(--route-color);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .day-card h3 {
+      margin: 7px 0 8px;
+      font-size: 19px;
+      line-height: 1.25;
+    }
+
+    .day-card .time {
+      display: inline-block;
+      margin-bottom: 11px;
+      padding: 4px 8px;
+      border-radius: 7px;
+      background: #edf0ec;
+      color: #59635d;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .day-card ul, .plain-list {
+      display: grid;
+      gap: 7px;
+      margin: 0;
+      padding-left: 18px;
+      color: #3e4a43;
+      font-size: 13px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .detail-grid .panel { padding: 19px; }
+
+    .panel h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px;
+      font-size: 17px;
+    }
+
+    .panel h3 .icon {
+      display: inline-grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border-radius: 9px;
+      background: #eef2ed;
+      font-size: 15px;
+    }
+
+    .pros-cons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .pros { border-top: 4px solid var(--green); }
+    .cons { border-top: 4px solid var(--red); }
+
+    .callout {
+      margin-top: 14px;
+      padding: 15px 17px;
+      border: 1px solid rgba(224, 137, 48, 0.18);
+      border-radius: var(--radius-md);
+      background: #fff8ec;
+      color: #6f4a22;
+      font-size: 13px;
+    }
+
+    .sources {
+      margin-top: 30px;
+      padding: 18px 20px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .sources a {
+      color: #3568a8;
+      text-decoration: none;
+    }
+
+    .sources a:hover { text-decoration: underline; }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 13px;
+      box-shadow: var(--shadow);
+    }
+
+    .leaflet-popup-content {
+      margin: 12px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .map-marker {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border: 3px solid white;
+      border-radius: 50%;
+      background: var(--marker-color);
+      color: white;
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.25);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .route-label {
+      padding: 4px 8px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.13);
+      color: #223027;
+      font-size: 11px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .leaflet-tooltip-top::before { border-top-color: rgba(255, 255, 255, 0.94); }
+
+    @media (max-width: 900px) {
+      .route-grid, .decision-grid { grid-template-columns: 1fr; }
+      .route-card { min-height: 250px; }
+      .plan-hero { grid-template-columns: 1fr; }
+      .days, .detail-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .shell {
+        width: min(100% - 20px, 1180px);
+        padding-top: 20px;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      .date-chip { width: max-content; }
+      #map { min-height: 310px; height: 46vh; }
+      .map-foot { align-items: flex-start; flex-direction: column; }
+      .map-note { text-align: left; }
+      .tabs { top: 6px; border-radius: 16px; }
+      .section-title { align-items: flex-start; flex-direction: column; }
+      .pros-cons { grid-template-columns: 1fr; }
+      .panel, .route-card { padding: 18px; }
+      .route-card { padding-bottom: 54px; }
+
+      .transport-chain:not(.compact) {
+        flex-direction: column;
+        overflow: visible;
+      }
+
+      .transport-chain:not(.compact) .transport-step {
+        flex-basis: auto;
+      }
+
+      .transport-chain:not(.compact) .transport-connector {
+        flex-basis: 18px;
+        transform: rotate(90deg);
+      }
+    }
+
+    @media print {
+      body { background: white; }
+      .shell { width: 100%; padding: 0; }
+      .tabs { display: none; }
+      #map { height: 360px; }
+      .route-card, .panel, .day-card, .verdict { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <div class="eyebrow">Qingyuan Route Lab</div>
+        <h1>清远三日游<br>三种路线对比</h1>
+        <p>先比较地图路线、交通方式和项目取舍，再决定是否进入逐小时安排。地图连线为路线示意，不作为实时导航。</p>
+      </div>
+      <div class="date-chip">2026.10.02 — 10.04 · 3 人</div>
+    </header>
+
+    <section class="map-card" aria-label="路线地图区域">
+      <div id="map" role="img" aria-label="清远三种路线对比地图"></div>
+      <div class="map-foot">
+        <div class="legend" id="mapLegend" aria-label="地图图例">
+          <span style="--legend-color: var(--blue)"><i></i>方案 1 · 宝晶宫</span>
+          <span style="--legend-color: var(--orange)"><i></i>方案 2 · 连州远线</span>
+          <span style="--legend-color: var(--green)"><i></i>方案 3 · 峰林两天</span>
+        </div>
+        <div class="map-note" id="mapNote">点击标签切换路线 · 线路为地理示意</div>
+      </div>
+    </section>
+
+    <nav class="tabs" aria-label="方案切换">
+      <button class="tab active" type="button" data-view="overview">三案总览</button>
+      <button class="tab" type="button" data-view="plan-1">方案 1 · 宝晶宫</button>
+      <button class="tab" type="button" data-view="plan-2">方案 2 · 连州远线</button>
+      <button class="tab" type="button" data-view="plan-3">方案 3 · 峰林两天</button>
+    </nav>
+
+    <div id="content" aria-live="polite"></div>
+
+    <footer class="sources">
+      <strong>信息提醒：</strong>
+      2026 年国庆最终营业时间、门票、接驳和高铁车次仍应以出发前官方公告为准。
+      参考：
+      <a href="https://www.gulongxia.com/" target="_blank" rel="noreferrer">古龙峡官网</a> ·
+      <a href="https://www.gdqy.gov.cn/jjqy/xxly/smj/content/post_1012005.html" target="_blank" rel="noreferrer">清远市政府·英西峰林</a> ·
+      <a href="http://www.lzdxh.com/" target="_blank" rel="noreferrer">连州地下河官网</a> ·
+      <a href="http://12306.cn/" target="_blank" rel="noreferrer">铁路 12306</a>
+    </footer>
+  </main>
+
+  <script>
+    const PLACES = {
+      guangzhouSouth: { name: "广州南站", lat: 22.9892, lng: 113.2692, kind: "高铁" },
+      guangzhouCity: { name: "广州荔湾", lat: 23.1250, lng: 113.2450, kind: "住宿" },
+      qingyuanStation: { name: "清远站", lat: 23.6814, lng: 113.1147, kind: "高铁" },
+      gulong: { name: "古龙峡", lat: 23.780320, lng: 112.957388, kind: "漂流" },
+      qingxin: { name: "清新区", lat: 23.7343, lng: 113.0166, kind: "住宿" },
+      jiulong: { name: "九龙镇", lat: 24.1018, lng: 112.9304, kind: "峰林" },
+      dongtian: { name: "洞天仙境", lat: 24.153515, lng: 112.900945, kind: "天坑/溶洞" },
+      huanghua: { name: "黄花镇峰林", lat: 24.2148, lng: 112.8588, kind: "骑行" },
+      baojing: { name: "宝晶宫", lat: 24.1328, lng: 113.3358, kind: "溶洞/高空项目" },
+      yingdeWest: { name: "英德西站", lat: 24.1668, lng: 113.3506, kind: "高铁" },
+      lianzhou: { name: "连州市区", lat: 24.7809, lng: 112.3774, kind: "住宿" },
+      underground: { name: "连州地下河", lat: 25.0178, lng: 112.3016, kind: "地下河" },
+      yaoVillage: { name: "千年瑶寨", lat: 24.5857, lng: 112.3044, kind: "古寨" }
+    };
+
+    const PLANS = [
+      {
+        id: "plan-1",
+        number: "01",
+        short: "宝晶宫近线",
+        title: "古龙峡 + 英西峰林 + 宝晶宫",
+        color: "#2477e8",
+        dash: "",
+        tagline: "项目最均衡，高铁进、高铁出，国庆执行稳定性最好。",
+        recommendation: "重视路线稳定和项目丰富度",
+        route: [
+          PLACES.guangzhouSouth, PLACES.qingyuanStation, PLACES.gulong,
+          PLACES.qingxin, PLACES.jiulong, PLACES.dongtian,
+          PLACES.baojing, PLACES.yingdeWest, PLACES.guangzhouSouth
+        ],
+        routeModes: ["rail", "charter", "charter", "charter", "charter", "charter", "charter", "rail"],
+        routeText: ["广州南", "清远站", "古龙峡", "清新区", "英西峰林", "宝晶宫", "英德西", "广州南"],
+        transportFlow: [
+          { mode: "rail", segment: "广州南 → 清远站", detail: "约 25–30 分钟" },
+          { mode: "charter", segment: "清远站 → 古龙峡 → 英西 → 宝晶宫 → 英德西", detail: "清远段连续包车 3 天" },
+          { mode: "rail", segment: "英德西 → 广州南", detail: "约 35–55 分钟" }
+        ],
+        metrics: { "交通折腾": 62, "项目丰富": 90, "国庆稳定": 78 },
+        days: [
+          {
+            date: "10月2日",
+            title: "古龙峡",
+            time: "上午抵达 · 下午漂流",
+            items: ["广州南高铁到清远站", "清远站接车前往古龙峡", "国际漂流、大瀑布群二选一或组合", "晚上住清新区"]
+          },
+          {
+            date: "10月3日",
+            title: "英西峰林",
+            time: "全天",
+            items: ["前往九龙镇、黄花镇", "洞天仙境、峰林乡村", "可加入短距离骑行", "晚上住九龙或黄花"]
+          },
+          {
+            date: "10月4日",
+            title: "宝晶宫",
+            time: "白天游玩 · 晚上高铁返穗",
+            items: ["溶洞、天鹅湖", "玻璃桥、滑索或蹦极自选", "送至英德西站", "晚间高铁回广州南"]
+          }
+        ],
+        transport: [
+          "广州南 → 清远站：高铁约 25–30 分钟",
+          "清远段：连续包车最稳，也可拆成预约接送",
+          "宝晶宫 → 英德西：约 20 分钟",
+          "英德西 → 广州南：高铁约 35–55 分钟"
+        ],
+        activities: ["国际漂流", "峡谷瀑布", "峰林观光", "溶洞", "骑行可选", "高空项目"],
+        pros: ["路线顺，基本不走回头路", "项目类型最多，三天不容易单调", "高铁进出，返程时间可控", "雨天仍有溶洞作为部分备选"],
+        cons: ["每天换区域，整理行李较频繁", "宝晶宫人工设施和商业化程度较高", "英西峰林只能玩一天", "连续包车成本高于方案 3"],
+        warning: "适合第一次去清远、希望“每一天都不一样”的组合。若不喜欢玻璃桥和人工项目，方案 3 更合适。"
+      },
+      {
+        id: "plan-2",
+        number: "02",
+        short: "连州粤北远线",
+        title: "古龙峡 + 英西峰林 + 连州地下河 / 千年瑶寨",
+        color: "#ee7d2d",
+        dash: "10 8",
+        tagline: "自然与民族文化最鲜明，但车程最长，4 日必须包车晚归。",
+        recommendation: "重视粤北特色，接受长车程与晚归",
+        route: [
+          PLACES.guangzhouSouth, PLACES.qingyuanStation, PLACES.gulong,
+          PLACES.qingxin, PLACES.jiulong, PLACES.huanghua,
+          PLACES.lianzhou, PLACES.underground, PLACES.yaoVillage, PLACES.guangzhouCity
+        ],
+        routeModes: ["rail", "charter", "charter", "charter", "charter", "charter", "charter", "charter", "charter"],
+        routeText: ["广州南", "清远站", "古龙峡", "英西峰林", "连州", "地下河", "千年瑶寨", "广州"],
+        transportFlow: [
+          { mode: "rail", segment: "广州南 → 清远站", detail: "约 25–30 分钟" },
+          { mode: "charter", segment: "清远站 → 古龙峡 → 英西 → 连州 → 瑶寨 → 广州", detail: "连续包车直至 4 日晚返穗" }
+        ],
+        metrics: { "交通折腾": 96, "项目丰富": 94, "国庆稳定": 42 },
+        days: [
+          {
+            date: "10月2日",
+            title: "古龙峡",
+            time: "上午抵达 · 下午漂流",
+            items: ["广州南高铁到清远站", "接车前往古龙峡", "国际漂流与峡谷项目", "晚上住清新区"]
+          },
+          {
+            date: "10月3日",
+            title: "英西峰林 → 连州",
+            time: "白天峰林 · 傍晚北上",
+            items: ["英西峰林户外观光", "不安排洞天仙境，避免溶洞重复", "下午适当提前结束", "晚上住连州市区或地下河附近"]
+          },
+          {
+            date: "10月4日",
+            title: "地下河 + 千年瑶寨",
+            time: "全天 · 晚间公路返穗",
+            items: ["上午连州地下河", "下午千年瑶寨", "两点间约 1–1.5 小时", "傍晚包车回广州，可能 23:00 后抵达"]
+          }
+        ],
+        transport: [
+          "广州南 → 清远站：高铁约 25–30 分钟",
+          "10月2–4日建议连续包车，临时打车不可控",
+          "英西峰林 → 连州：国庆按 2–3 小时准备",
+          "千年瑶寨 → 广州：平时约 3.5 小时，国庆可能 4.5–6 小时"
+        ],
+        activities: ["国际漂流", "峰林观光", "骑行可选", "地下暗河游船", "溶洞", "瑶寨建筑与民俗"],
+        pros: ["自然、人文类型最丰富", "千年瑶寨具有鲜明粤北辨识度", "地下河和漂流的水体体验不同", "适合愿意为目的地特色多坐车的人"],
+        cons: ["国庆交通风险最高", "4 日无法用高铁返程", "两大景点排队时可能被迫二选一", "连续包车里程和费用最高"],
+        warning: "这是体验优先、效率让步的方案。若 4 日下午实时路况恶化，应优先保留千年瑶寨或地下河中的一个。"
+      },
+      {
+        id: "plan-3",
+        number: "03",
+        short: "峰林深度线",
+        title: "古龙峡 + 英西峰林两天",
+        color: "#2f9d69",
+        dash: "3 8",
+        tagline: "少换区域，以骑行和乡村深度体验换取更轻松的交通结构。",
+        recommendation: "喜欢自然、骑行，且不想连续包车",
+        route: [
+          PLACES.guangzhouSouth, PLACES.qingyuanStation, PLACES.gulong,
+          PLACES.qingxin, PLACES.jiulong, PLACES.dongtian,
+          PLACES.huanghua, PLACES.yingdeWest, PLACES.guangzhouSouth
+        ],
+        routeModes: ["rail", "transfer", "transfer", "transfer", "ride", "ride", "transfer", "rail"],
+        routeText: ["广州南", "清远站", "古龙峡", "九龙镇", "黄花镇", "英德西", "广州南"],
+        transportFlow: [
+          { mode: "rail", segment: "广州南 → 清远站", detail: "约 25–30 分钟" },
+          { mode: "transfer", segment: "清远站 → 古龙峡 → 清新区", detail: "出租车或提前预约" },
+          { mode: "transfer", segment: "清新区 → 英西峰林民宿", detail: "单程预约接送" },
+          { mode: "ride", segment: "九龙镇 ↔ 黄花镇核心区", detail: "两天自行车或电动车" },
+          { mode: "transfer", segment: "峰林民宿 → 英德西站", detail: "让民宿提前约车" },
+          { mode: "rail", segment: "英德西 → 广州南", detail: "约 35–55 分钟" }
+        ],
+        metrics: { "交通折腾": 38, "项目丰富": 72, "国庆稳定": 86 },
+        days: [
+          {
+            date: "10月2日",
+            title: "古龙峡",
+            time: "上午抵达 · 下午漂流",
+            items: ["广州南高铁到清远站", "出租车或预约接送至古龙峡", "漂流与峡谷项目", "晚上住清新区"]
+          },
+          {
+            date: "10月3日",
+            title: "英西峰林 · 九龙段",
+            time: "全天",
+            items: ["预约单程接送到峰林民宿", "洞天仙境、峰林晓镇等核心点", "短距离骑行适应路况", "住黄花镇或九龙镇"]
+          },
+          {
+            date: "10月4日",
+            title: "英西峰林 · 黄花段",
+            time: "全天骑行 · 晚上高铁返穗",
+            items: ["小赵州桥、彭家祠", "千军峰林、乡村绿道", "普通自行车或电动车", "民宿预约送英德西站"]
+          }
+        ],
+        transport: [
+          "高铁进入清远、从英德西返回广州",
+          "清新区 → 英西：提前预约一次单程接送",
+          "英西核心区：自行车或电动车为主",
+          "黄花镇网约车不稳定，送站必须让民宿提前预约"
+        ],
+        activities: ["国际漂流", "洞天仙境", "峰林乡村", "自行车/电动车", "小赵州桥", "彭家祠与千军峰林"],
+        pros: ["不需要租车或连续三天包车", "两晚可住同一区域，节奏最从容", "能看到英西峰林的乡村细节", "国庆行程调整空间最大"],
+        cons: ["后两天景观类型相近", "天气不好会同时影响两天骑行", "黄花镇临时网约车不可靠", "普通自行车 20–40 公里对体力有要求"],
+        warning: "推荐采用“预约接送 + 电动车骑行”，不要把跨区域交通寄托在临时网约车上；雨天则让民宿联系当地车辆。"
+      }
+    ];
+
+    const TRANSPORT_STYLES = {
+      rail: { label: "高铁", icon: "🚄", color: "#4f6fe8", dash: "8 7" },
+      charter: { label: "包车", icon: "🚐", color: "#e47d2f", dash: "" },
+      transfer: { label: "预约接送", icon: "🚕", color: "#8b5bd6", dash: "5 6" },
+      ride: { label: "骑行", icon: "🚲", color: "#2f9d69", dash: "2 7" }
+    };
+
+    const PLAN_BY_ID = Object.fromEntries(PLANS.map(plan => [plan.id, plan]));
+    let map;
+    let routeLayer;
+
+    function escapeHTML(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function initMap() {
+      if (typeof L === "undefined") {
+        document.getElementById("map").innerHTML =
+          '<div style="padding:28px;color:#66716a">地图资源暂未加载，请联网后刷新页面。下方文字对比仍可正常阅读。</div>';
+        return;
+      }
+
+      map = L.map("map", { zoomControl: true, scrollWheelZoom: false });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 18,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(map);
+      routeLayer = L.layerGroup().addTo(map);
+    }
+
+    function markerIcon(color, number) {
+      return L.divIcon({
+        className: "",
+        html: `<span class="map-marker" style="--marker-color:${color}">${number}</span>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -12]
+      });
+    }
+
+    function addPlanToMap(plan, detailed) {
+      const latLngs = plan.route.map(place => [place.lat, place.lng]);
+
+      if (!detailed) {
+        const line = L.polyline(latLngs, {
+          color: plan.color,
+          weight: 4,
+          opacity: 0.68,
+          dashArray: plan.dash || null,
+          lineCap: "round",
+          lineJoin: "round"
+        }).addTo(routeLayer);
+        const anchor = plan.route[Math.floor(plan.route.length * 0.62)];
+        L.tooltip({
+          permanent: true,
+          direction: "top",
+          className: "route-label",
+          offset: [0, -4]
+        })
+          .setLatLng([anchor.lat, anchor.lng])
+          .setContent(`${plan.number} · ${escapeHTML(plan.short)}`)
+          .addTo(routeLayer);
+        return line;
+      }
+
+      plan.route.slice(0, -1).forEach((place, index) => {
+        const nextPlace = plan.route[index + 1];
+        const style = TRANSPORT_STYLES[plan.routeModes[index]];
+        L.polyline(
+          [[place.lat, place.lng], [nextPlace.lat, nextPlace.lng]],
+          {
+            color: style.color,
+            weight: 7,
+            opacity: 0.92,
+            dashArray: style.dash || null,
+            lineCap: "round",
+            lineJoin: "round"
+          }
+        ).addTo(routeLayer);
+      });
+
+      const seen = new Set();
+      plan.route.forEach((place, index) => {
+        const key = `${place.lat},${place.lng}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        L.marker([place.lat, place.lng], {
+          icon: markerIcon(plan.color, seen.size)
+        })
+          .bindPopup(() => {
+            const mode = plan.routeModes[index];
+            const next = mode ? TRANSPORT_STYLES[mode] : null;
+            const nextText = next
+              ? `<br><span style="color:${next.color};font-weight:700">${next.icon} 下一段：${next.label}</span>`
+              : "<br>路线终点";
+            return `<strong>${escapeHTML(place.name)}</strong><br>${escapeHTML(place.kind)}${nextText}`;
+          })
+          .addTo(routeLayer);
+      });
+      return null;
+    }
+
+    function renderTransportLegend(view) {
+      const legend = document.getElementById("mapLegend");
+      const note = document.getElementById("mapNote");
+      if (view === "overview") {
+        legend.className = "legend";
+        legend.innerHTML = PLANS.map(plan => `
+          <span style="--legend-color:${plan.color}"><i></i>方案 ${plan.number} · ${escapeHTML(plan.short)}</span>
+        `).join("");
+        note.textContent = "总览按方案分色 · 切换单方案后按交通方式分色";
+        return;
+      }
+
+      const plan = PLAN_BY_ID[view];
+      const modes = [...new Set(plan.routeModes)];
+      legend.className = "legend transport-mode-legend";
+      legend.innerHTML = modes.map(mode => {
+        const style = TRANSPORT_STYLES[mode];
+        return `<span style="--mode-color:${style.color}"><i></i>${style.icon} ${style.label}</span>`;
+      }).join("");
+      note.textContent = "地图线路颜色直接对应交通方式 · 线路为地理示意";
+    }
+
+    function renderMap(view) {
+      renderTransportLegend(view);
+      if (!map || !routeLayer) return;
+      routeLayer.clearLayers();
+      const bounds = [];
+
+      if (view === "overview") {
+        PLANS.forEach(plan => {
+          addPlanToMap(plan, false);
+          plan.route.forEach(place => bounds.push([place.lat, place.lng]));
+        });
+      } else {
+        const plan = PLAN_BY_ID[view];
+        addPlanToMap(plan, true);
+        plan.route.forEach(place => bounds.push([place.lat, place.lng]));
+      }
+
+      map.fitBounds(bounds, {
+        padding: [30, 30],
+        maxZoom: view === "overview" ? 8 : 9,
+        animate: true
+      });
+      window.setTimeout(() => map.invalidateSize(), 100);
+    }
+
+    function listHTML(items) {
+      return `<ul class="plain-list">${items.map(item => `<li>${escapeHTML(item)}</li>`).join("")}</ul>`;
+    }
+
+    function routeStringHTML(plan) {
+      return plan.routeText.map((name, index) => {
+        const node = `<span>${escapeHTML(name)}</span>`;
+        return index === plan.routeText.length - 1 ? node : `${node}<b>→</b>`;
+      }).join("");
+    }
+
+    function transportChainHTML(plan, compact = false) {
+      const steps = plan.transportFlow.map((step, index) => {
+        const style = TRANSPORT_STYLES[step.mode];
+        const card = `
+          <div class="transport-step" style="--mode-color:${style.color}">
+            <div class="transport-step-head">
+              <span class="transport-icon">${style.icon}</span>
+              <span class="transport-mode">${escapeHTML(style.label)}</span>
+            </div>
+            <span class="transport-segment">${escapeHTML(step.segment)}</span>
+            <span class="transport-detail">${escapeHTML(step.detail)}</span>
+          </div>
+        `;
+        const connector = index === plan.transportFlow.length - 1
+          ? ""
+          : '<span class="transport-connector" aria-hidden="true">→</span>';
+        return card + connector;
+      }).join("");
+      return `<div class="transport-chain${compact ? " compact" : ""}" aria-label="交通方式链路">${steps}</div>`;
+    }
+
+    function renderOverview() {
+      return `
+        <section>
+          <div class="section-title">
+            <div>
+              <h2>三条路线，一眼看懂</h2>
+              <p>三种方案都保留古龙峡；差异集中在后两天走得多远、是否依赖包车，以及更看重项目还是深度。</p>
+            </div>
+          </div>
+          <div class="route-grid">
+            ${PLANS.map(plan => `
+              <article class="route-card" data-open-plan="${plan.id}" tabindex="0"
+                style="--route-color:${plan.color}" aria-label="查看${escapeHTML(plan.title)}">
+                <span class="route-number">${plan.number}</span>
+                <h3>${escapeHTML(plan.title)}</h3>
+                <p class="tagline">${escapeHTML(plan.tagline)}</p>
+                ${transportChainHTML(plan, true)}
+                <ul>
+                  <li>${escapeHTML(plan.days[2].time)}</li>
+                  <li>适合：${escapeHTML(plan.recommendation)}</li>
+                </ul>
+                <span class="card-action">查看地图路线与优缺点 →</span>
+              </article>
+            `).join("")}
+          </div>
+        </section>
+
+        <section>
+          <div class="section-title">
+            <div>
+              <h2>怎么选</h2>
+              <p>不端水：先按你们最在意的变量做选择。</p>
+            </div>
+          </div>
+          <div class="decision-grid">
+            <div class="verdict">
+              <strong>要稳、要丰富 → 方案 1</strong>
+              <span>高铁进出，漂流、峰林、溶洞、高空项目覆盖最全。</span>
+            </div>
+            <div class="verdict">
+              <strong>要粤北特色 → 方案 2</strong>
+              <span>地下河与瑶寨记忆点最强，但要接受长途包车和晚归。</span>
+            </div>
+            <div class="verdict">
+              <strong>要骑行、少折腾 → 方案 3</strong>
+              <span>峰林连住，预约接送加骑行，不必租车或连续包车。</span>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderPlan(plan) {
+      return `
+        <section style="--route-color:${plan.color}">
+          <div class="plan-hero">
+            <div class="panel">
+              <div class="plan-kicker"><i></i>方案 ${plan.number}</div>
+              <h2>${escapeHTML(plan.title)}</h2>
+              <p>${escapeHTML(plan.tagline)}</p>
+              <div class="route-string" aria-label="地图路线">
+                ${routeStringHTML(plan)}
+              </div>
+            </div>
+            <div class="panel">
+              <h3><span class="icon">📍</span>地图路线强度</h3>
+              <div class="metric-list">
+                ${Object.entries(plan.metrics).map(([label, value]) => `
+                  <div class="metric">
+                    <label>${escapeHTML(label)}</label>
+                    <span class="meter"><i style="--meter-width:${value}%"></i></span>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          </div>
+
+          <div class="section-title">
+            <div>
+              <h2>交通链路</h2>
+              <p>从左到右就是实际移动顺序；颜色与上方地图的线路分段完全一致。</p>
+            </div>
+          </div>
+          <div class="panel transport-panel">
+            ${transportChainHTML(plan)}
+          </div>
+
+          <div class="section-title">
+            <div>
+              <h2>三天大概安排</h2>
+              <p>只给时间段和区域骨架，确认方案后再细化到具体班次与入园时间。</p>
+            </div>
+          </div>
+          <div class="days">
+            ${plan.days.map(day => `
+              <article class="day-card">
+                <div class="day-label">${escapeHTML(day.date)}</div>
+                <h3>${escapeHTML(day.title)}</h3>
+                <span class="time">${escapeHTML(day.time)}</span>
+                ${listHTML(day.items)}
+              </article>
+            `).join("")}
+          </div>
+
+          <div class="section-title">
+            <div>
+              <h2>交通与游玩项目</h2>
+              <p>重点比较是否需要连续包车、能否高铁返程，以及骑行的可行性。</p>
+            </div>
+          </div>
+          <div class="detail-grid">
+            <article class="panel">
+              <h3><span class="icon">🚄</span>交通方式</h3>
+              ${listHTML(plan.transport)}
+            </article>
+            <article class="panel">
+              <h3><span class="icon">🧭</span>游玩项目</h3>
+              ${listHTML(plan.activities)}
+            </article>
+            <article class="panel">
+              <h3><span class="icon">🎯</span>适合谁</h3>
+              <p>${escapeHTML(plan.recommendation)}</p>
+            </article>
+          </div>
+
+          <div class="section-title">
+            <div>
+              <h2>优缺点</h2>
+              <p>基于国庆客流、三位成年人和晚间返回广州的条件判断。</p>
+            </div>
+          </div>
+          <div class="pros-cons">
+            <article class="panel pros">
+              <h3><span class="icon">✓</span>优点</h3>
+              ${listHTML(plan.pros)}
+            </article>
+            <article class="panel cons">
+              <h3><span class="icon">!</span>缺点</h3>
+              ${listHTML(plan.cons)}
+            </article>
+          </div>
+          <div class="callout"><strong>选择提示：</strong>${escapeHTML(plan.warning)}</div>
+        </section>
+      `;
+    }
+
+    function bindOverviewCards() {
+      document.querySelectorAll("[data-open-plan]").forEach(card => {
+        const open = () => {
+          const planId = card.dataset.openPlan;
+          const tab = document.querySelector(`[data-view="${planId}"]`);
+          if (tab) tab.click();
+        };
+        card.addEventListener("click", open);
+        card.addEventListener("keydown", event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            open();
+          }
+        });
+      });
+    }
+
+    function renderView(view) {
+      document.querySelectorAll(".tab").forEach(tab => {
+        const isActive = tab.dataset.view === view;
+        tab.classList.toggle("active", isActive);
+        tab.setAttribute("aria-current", isActive ? "page" : "false");
+      });
+
+      const content = document.getElementById("content");
+      content.innerHTML = view === "overview"
+        ? renderOverview()
+        : renderPlan(PLAN_BY_ID[view]);
+      renderMap(view);
+      bindOverviewCards();
+    }
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => renderView(tab.dataset.view));
+    });
+
+    initMap();
+    renderView("overview");
+  </script>
+</body>
+</html>
