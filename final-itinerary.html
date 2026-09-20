@@ -3,12 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>广东六日最终行程｜广州 · 古龙峡 · 英西峰林两天</title>
-<meta name="description" content="2026年国庆广州、古龙峡与英西峰林六日最终行程，含逐时路线、住宿区域、交通和每日三餐建议。">
+<title>广东六日最终行程｜花都 · 古龙峡 · 英西峰林 · 长隆</title>
+<meta name="description" content="2026年国庆广东六日最终行程，含指定酒店、逐段交通、预计车程、古龙峡、英西峰林和长隆动物世界安排。">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root {
   --bg-primary:#fff;
@@ -41,18 +39,9 @@ body{
 }
 a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
-#map{width:100%;height:40vh;min-height:280px;position:sticky;top:0;z-index:100}
-.locate-btn{
-  width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,.92);
-  backdrop-filter:blur(8px);border:none;box-shadow:0 1px 4px rgba(0,0,0,.18);
-  display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer
-}
-.locate-btn.active{color:#007aff}
-@keyframes loc-pulse{0%{transform:scale(1);opacity:.55}100%{transform:scale(2.4);opacity:0}}
-.loc-pulse{width:14px;height:14px;border-radius:50%;background:rgba(0,122,255,.25);animation:loc-pulse 1.6s ease-out infinite}
 .tabs{
-  display:flex;gap:6px;padding:12px 16px;overflow-x:auto;background:rgba(255,255,255,.88);
-  backdrop-filter:saturate(180%) blur(20px);position:sticky;top:40vh;z-index:99;
+  display:flex;gap:6px;padding:12px 16px;overflow-x:auto;background:rgba(255,255,255,.94);
+  backdrop-filter:saturate(180%) blur(20px);position:sticky;top:0;z-index:99;
   border-bottom:.5px solid var(--separator);scrollbar-width:none
 }
 .tabs::-webkit-scrollbar{display:none}
@@ -85,6 +74,16 @@ a:hover{text-decoration:underline}
 .route-node{flex:0 0 auto;background:#eaf4ef;color:#164b38;border:1px solid #cbe1d7;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:700}
 .route-arrow{color:var(--text-tertiary);font-size:13px;flex:0 0 auto}
 .route-note{font-size:12px;color:var(--text-secondary);line-height:1.55;margin-top:6px}
+.transport-list{display:grid;gap:10px;margin-bottom:16px}
+.transport-card{background:#edf6f2;border:1px solid #cfe3da;border-radius:var(--radius-md);padding:14px}
+.transport-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.transport-mode{font-size:15px;font-weight:750;color:#164b38}
+.transport-duration{font-size:12px;font-weight:750;color:var(--accent);background:#fff;padding:4px 8px;border-radius:999px;white-space:nowrap}
+.transport-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center}
+.transport-place small{display:block;color:var(--text-secondary);font-size:11px;margin-bottom:2px}
+.transport-place strong{font-size:14px;line-height:1.35}
+.transport-arrow{color:var(--text-tertiary);font-size:16px}
+.transport-note{font-size:12px;color:var(--text-secondary);line-height:1.55;margin-top:9px}
 .timeline{position:relative;padding-left:24px}
 .timeline::before{content:"";position:absolute;left:7px;top:20px;bottom:20px;width:1.5px;background:var(--separator)}
 .tl-item{position:relative;margin-bottom:10px}
@@ -135,32 +134,22 @@ a:hover{text-decoration:underline}
 .as-group .as-item{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;font-size:18px;color:#007aff;font-weight:550;border:none;background:none;width:100%;cursor:pointer}
 .as-group .as-item+.as-item{border-top:.5px solid rgba(0,0,0,.12)}
 .as-cancel{font-weight:700!important}
-.leaflet-popup-content-wrapper{border-radius:var(--radius-md)!important;box-shadow:var(--shadow-lg)!important;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif!important}
-.leaflet-popup-content{font-size:14px!important;line-height:1.5!important;margin:12px 14px!important}
-.leaflet-control-zoom{border-radius:12px!important;overflow:hidden;box-shadow:var(--shadow-md)!important;border:none!important}
-.leaflet-control-attribution{font-size:9px!important;opacity:.55}
 @media(max-width:520px){
-  #map{height:36vh;min-height:245px}
-  .tabs{top:36vh}
   .content{padding-left:12px;padding-right:12px}
   .hero h1{font-size:25px}
   .info-card{padding:14px}
-}
-@media(min-width:900px){
-  #map{height:46vh}
-  .tabs{top:46vh}
+  .transport-grid{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
 }
 </style>
 </head>
 <body>
-<div id="map" role="application" aria-label="广东最终行程互动地图"></div>
 <div class="tabs" id="tabs" aria-label="按日期切换"></div>
 <main class="content" id="content"></main>
 
 <script>
 const HOTEL = { name:"广州白云机场航站楼酒店区", lat:23.377894, lng:113.304651 };
 
-const DAYS = [
+const LEGACY_DAYS = [
   { id: 0, label: "总览", color: "#176b4d", locations: [] },
   { id: 1, label: "9/30 抵达", date: "9月30日 · 周三 · 深夜落地", title: "白云机场落地，只做入住", color: "#6e6e73", route: "白云机场 → 机场酒店区", locations: [
     { name:"广州白云国际机场", lat:23.377894, lng:113.304651, type:"transport", time:"22:00 后", desc:"按实际航班落地；先确认到达航站楼，再联系酒店接机。", detail:"预留 45–75 分钟完成下机、行李提取与接驳。机场航站楼仍是待确认项。", gmap:"广州白云国际机场" },
@@ -229,7 +218,79 @@ const DAYS = [
   ]}
 ];
 
-function overviewContent(){
+const DAYS = [
+  {id:0,label:"总览",color:"#176b4d",locations:[]},
+  {id:1,label:"9/30 花都",date:"9月30日 · 周三 · 深夜抵达",title:"白云机场落地，住花都站附近",color:"#6e6e73",route:"白云机场 → 花都站（广州北站）附近酒店",transfers:[
+    {mode:"城际 / 出租车",from:"白云机场",to:"花都站附近酒店",duration:"约 30–50 分钟",note:"22:00 后落地先看广州东环城际末班；错过末班直接打车，不再进广州市区。"}
+  ],locations:[
+    {name:"广州白云国际机场",lat:23.3924,lng:113.2988,type:"transport",time:"22:00 后",desc:"取行李后直接前往花都站附近；核对实际到达航站楼。",gmap:"广州白云国际机场"},
+    {name:"花都站附近酒店",lat:23.3767,lng:113.2017,type:"hotel",time:"23:30",desc:"住宿选花都站/广州北站步行或短途打车范围，次日早晨轻装乘城际。",detail:"订房时确认可提供早饭或打包早餐，并问清前往花都站城际入口的路线。",gmap:"花都站 广州北站 酒店"}
+  ]},
+  {id:2,label:"10/1 古龙峡",date:"10月1日 · 周四 · 清远",title:"花都城际到清城 · 古龙峡漂流",color:"#1479b8",route:"花都站 → 清城站 → 雅特斯酒店寄存行李 → 古龙峡 → 雅特斯酒店",transfers:[
+    {mode:"广清城际",from:"花都站",to:"清城站",duration:"约 30–35 分钟",note:"08:00 左右出发；公交化运营仍要预留 10–20 分钟候车和进站时间。"},
+    {mode:"出租车 / 网约车",from:"清城站",to:"雅特斯酒店（清远清新区政府古龙峡店）",duration:"约 25–35 分钟",note:"先到酒店寄存行李，国庆按实时路况调整。"},
+    {mode:"出租车 / 预约车",from:"雅特斯酒店",to:"古龙峡游客中心",duration:"约 20–30 分钟",note:"去程时同步约好 17:00 左右返程，避免漂流散场后临时叫不到车。"}
+  ],locations:[
+    {name:"早餐：花都站附近酒店",lat:23.3767,lng:113.2017,type:"food",time:"07:00",desc:"吃主食、鸡蛋并带水；07:30 左右退房前往花都站。",budget:"酒店含早优先",dianpingKeyword:"花都站 广州北站 早餐",xhsKeyword:"花都站 早餐"},
+    {name:"花都站",lat:23.3767,lng:113.2017,type:"transport",time:"08:00",desc:"乘广清城际前往清城站，刷城际乘车码或按现场指引购票。",gmap:"花都站"},
+    {name:"清城站",lat:23.6648,lng:113.0569,type:"transport",time:"08:35–08:50",desc:"出站后直接打车到图1酒店，不在清远市区绕行。",gmap:"清城站"},
+    {name:"雅特斯酒店（清远清新区政府古龙峡店）",lat:23.7368,lng:113.0086,type:"hotel",time:"09:15",desc:"先寄存行李再去古龙峡；地址：清新区太和镇清和大道 71 号。",detail:"截图所示酒店距清新区政府步行约 600 米。当天晚上回这里住宿。",gmap:"雅特斯酒店 清远清新区政府古龙峡店"},
+    {name:"古龙峡游客中心",lat:23.78032,lng:112.957388,type:"spot",time:"09:50–10:10",desc:"取票、寄存、确认当天漂流批次；国庆以现场开放时间为准。",detail:"天气异常时当天再次确认是否开漂，景区咨询电话 0763-5200586。",reserve:"https://www.gulongxia.com/",gmap:"古龙峡游客中心"},
+    {name:"古龙秘境 · 大瀑布群",lat:23.7842,lng:112.9546,type:"spot",time:"10:20",desc:"先游瀑布线，排队严重时不强塞所有玻璃项目。",gmap:"古龙峡 大瀑布群"},
+    {name:"午餐：古龙峡景区就近",lat:23.7799,lng:112.9581,type:"food",time:"11:50",desc:"漂流前吃七分饱，优先粉面、简餐或古龙渔庄；不要吃得太油。",budget:"约 ¥40–90/人",dianpingKeyword:"古龙峡 午餐 古龙渔庄",xhsKeyword:"古龙峡 漂流 午餐"},
+    {name:"古龙峡国际漂流",lat:23.7863,lng:112.9504,type:"spot",time:"13:00",desc:"排队、换装、漂流、冲洗共预留约 3 小时；干衣和电子设备分开防水。",reserve:"https://www.gulongxia.com/",gmap:"古龙峡国际漂流"},
+    {name:"预约车返回雅特斯酒店",lat:23.7368,lng:113.0086,type:"transport",time:"17:00",desc:"约 20–30 分钟；司机按漂流实际结束时间弹性等候。",gmap:"雅特斯酒店 清远清新区政府古龙峡店"},
+    {name:"晚餐：清新区清远鸡 / 河鲜",lat:23.7368,lng:113.0086,type:"food",time:"18:30",desc:"在酒店附近解决，主推清远鸡、麻竹笋和时蔬，不为网红店远距离折返。",budget:"约 ¥70–110/人",dianpingKeyword:"清新区政府 清远鸡 农家菜",xhsKeyword:"清新区 清远鸡 美食"}
+  ]},
+  {id:3,label:"10/2 英西",date:"10月2日 · 周五 · 英西峰林第 1 天",title:"清新区转场黄花镇 · 九龙段",color:"#7b61a8",route:"雅特斯酒店 → 英德英峯酒店 → 洞天仙境 → 峰林晓镇 → 英德英峯酒店",transfers:[
+    {mode:"预约车 / 包车",from:"雅特斯酒店",to:"英德英峯酒店（英西峰林走廊店）",duration:"约 1.5–2.5 小时",note:"建议 08:00–08:30 出发；国庆山路按上限预留，提前写明三人和行李数量。"}
+  ],locations:[
+    {name:"早餐：雅特斯酒店附近",lat:23.7368,lng:113.0086,type:"food",time:"07:20",desc:"早餐后退房，08:00–08:30 上预约车。",budget:"酒店含早优先",dianpingKeyword:"清新区政府 早餐 肠粉",xhsKeyword:"清新区 早餐"},
+    {name:"英德英峯酒店（英西峰林走廊店）",lat:24.2139,lng:112.8615,type:"hotel",time:"10:00–11:00",desc:"图2酒店；地址：英德黄花镇明迳社区居委会黄花新区大街 B9 号。",detail:"先寄存行李。酒店位于黄花镇中心，次日骑行和吃饭都方便。",gmap:"英德英峯酒店 英西峰林走廊店"},
+    {name:"洞天仙境",lat:24.153515,lng:112.900945,type:"spot",time:"11:20",desc:"游船、天坑和栈道，预留约 2–2.5 小时；这是当天重点付费景点。",gmap:"英西峰林 洞天仙境"},
+    {name:"午餐：九龙豆腐农家菜",lat:24.139009,lng:112.919917,type:"food",time:"13:40",desc:"主推九龙豆腐、腐竹、麻竹笋和时蔬；三人控制份量。",budget:"约 ¥50–80/人",dianpingKeyword:"九龙镇 九龙豆腐 农家菜",xhsKeyword:"英德 九龙豆腐 必吃"},
+    {name:"峰林晓镇",lat:24.120534,lng:112.923815,type:"spot",time:"15:00",desc:"看九龙段峰林全景；步行主线约 1.5–2 小时，付费娱乐项目只选一个。",gmap:"英西峰林 峰林晓镇"},
+    {name:"晚餐：黄花镇农家菜",lat:24.2139,lng:112.8615,type:"food",time:"18:30",desc:"回酒店附近吃黄花走地鸡、豆腐和小炒，避免夜间再跑山路。",budget:"约 ¥70–100/人",dianpingKeyword:"英德 黄花镇 农家菜",xhsKeyword:"英西峰林 黄花镇 农家菜"},
+    {name:"英德英峯酒店（英西峰林走廊店）",lat:24.2139,lng:112.8615,type:"hotel",time:"20:00",desc:"当晚入住图2酒店；提前向前台确认次日电动车和下午转场车辆。",gmap:"英德英峯酒店 英西峰林走廊店"}
+  ]},
+  {id:4,label:"10/3 英西",date:"10月3日 · 周六 · 英西峰林第 2 天",title:"黄花段慢游 · 傍晚转宝晶宫",color:"#2f9d69",route:"英德英峯酒店 → 黄花段骑行 → 取行李 → 宝晶宫天鹅湖温泉酒店",transfers:[
+    {mode:"预约车",from:"英德英峯酒店（英西峰林走廊店）",to:"清远宝晶宫天鹅湖温泉酒店",duration:"约 1.5–2 小时",note:"约 16:00 出发。图3酒店不在英西峰林核心区，是为了次日上午更轻松前往英德西站。"}
+  ],locations:[
+    {name:"早餐：英德英峯酒店附近",lat:24.2139,lng:112.8615,type:"food",time:"07:30",desc:"吃饱后取电动车，带足饮水、防晒和驱蚊用品。",budget:"酒店含早优先",dianpingKeyword:"英德 黄花镇 早餐",xhsKeyword:"英西峰林 黄花镇 早餐"},
+    {name:"取电动车与安全检查",lat:24.2139,lng:112.8615,type:"transport",time:"08:20",desc:"检查刹车、电量、灯和头盔；三人不会骑就改当地包车半日。",gmap:"黄花镇 电动车 租赁"},
+    {name:"小赵州桥（永丰古桥）",lat:24.229,lng:112.857,type:"spot",time:"08:50",desc:"清晨看古桥、溪流和峰林，停留约 40 分钟。",gmap:"英德 小赵州桥 永丰古桥"},
+    {name:"黄花公园 · 峰林乡道",lat:24.2258,lng:112.8605,type:"spot",time:"09:40",desc:"沿铺装乡道慢骑，每 45 分钟休息补水，不追求里程。",gmap:"英德 黄花公园"},
+    {name:"公正溪村峰林观景段",lat:24.2028,lng:112.8468,type:"spot",time:"10:50",desc:"田园、溪流与峰林组合；停车拍照不要占用乡道。",gmap:"英西峰林 公正溪村峰林"},
+    {name:"午餐：黄花镇农家菜",lat:24.2139,lng:112.8615,type:"food",time:"12:30",desc:"回镇上吃腐竹、九龙豆腐和小炒，下午不再安排远点。",budget:"约 ¥50–80/人",dianpingKeyword:"英德 黄花镇 午餐 农家菜",xhsKeyword:"英西峰林 黄花镇 午餐"},
+    {name:"归还电动车 · 取行李",lat:24.2139,lng:112.8615,type:"hotel",time:"15:20",desc:"简单整理后等预约车，最晚 16:00 左右出发。",gmap:"英德英峯酒店 英西峰林走廊店"},
+    {name:"清远宝晶宫天鹅湖温泉酒店",lat:24.1232,lng:113.3513,type:"hotel",time:"17:30–18:00",desc:"图3酒店；地址：英德宝晶宫生态旅游度假区。",detail:"酒店距英德西站驾车约 11.3 公里、17–21 分钟。它不在英西核心区，入住是为次日高铁转场。",gmap:"清远宝晶宫天鹅湖温泉酒店"},
+    {name:"酒店晚餐与温泉",lat:24.1232,lng:113.3513,type:"food",time:"18:30",desc:"不再外出找餐厅；入住后在酒店用餐，按体力泡温泉并早睡。",budget:"以酒店套餐为准",dianpingKeyword:"宝晶宫天鹅湖温泉酒店 餐厅",xhsKeyword:"宝晶宫天鹅湖温泉酒店 温泉"}
+  ]},
+  {id:5,label:"10/4 长隆",date:"10月4日 · 周日 · 广州",title:"英德西高铁返穗 · 长隆动物世界",color:"#d97706",route:"宝晶宫酒店 → 英德西站 → 广州南站 → 长隆南门 → 白云机场酒店",transfers:[
+    {mode:"出租车 / 酒店接送",from:"清远宝晶宫天鹅湖温泉酒店",to:"英德西站",duration:"约 17–25 分钟",note:"建议 09:00 前离店，09:25 前到站，给安检和国庆客流留足时间。"},
+    {mode:"高铁",from:"英德西站 10:13",to:"广州南站 10:49",duration:"36 分钟",note:"固定车次；三人同单购票，提前下载电子订单并核对身份证件。"},
+    {mode:"出租车",from:"广州南站",to:"长隆野生动物世界南门",duration:"约 25–40 分钟",note:"三人带行李优先打车；地铁 7 号线到汉溪长隆再换穿梭巴士约 35–50 分钟。"},
+    {mode:"预约车",from:"长隆野生动物世界",to:"白云机场酒店",duration:"约 1.5–2 小时",note:"闭园前半小时取走行李，离园后直接去提供凌晨接送的机场酒店。"}
+  ],locations:[
+    {name:"早餐：宝晶宫酒店",lat:24.1232,lng:113.3513,type:"food",time:"08:00",desc:"早餐后退房；09:00 前乘酒店接送或出租车去英德西。",budget:"酒店含早优先"},
+    {name:"英德西站",lat:24.1668,lng:113.3506,type:"transport",time:"09:20",desc:"至少提前 45 分钟到站，不把缓冲压缩给早餐或温泉。",reserve:"https://www.12306.cn/",gmap:"英德西站"},
+    {name:"英德西 → 广州南",lat:22.9892,lng:113.2692,type:"transport",time:"10:13–10:49",desc:"高铁运行 36 分钟；到广州南后直接前往长隆。",reserve:"https://www.12306.cn/",gmap:"广州南站"},
+    {name:"长隆南门官方寄存柜",lat:22.9947,lng:113.3193,type:"transport",time:"11:25–11:45",desc:"南门园区外广场寄存行李；大柜可放 29 寸以内，超大柜可放 34 寸以内。",detail:"官方要求当天闭园前半小时取走，不可过夜。收费和规格以现场公告为准。",reserve:"https://www.chimelong.com/gz/safaripark/question/",gmap:"长隆野生动物世界南门"},
+    {name:"长隆野生动物世界",lat:22.9986,lng:113.317,type:"spot",time:"11:45",desc:"这是下午版行程：优先熊猫乐园、考拉园、亚洲象和核心动物展区。",detail:"抵达较晚，不追求完整北进南出。表演、缆车或小火车排队超过 60 分钟就删除，确保闭园前取行李。",reserve:"https://www.chimelong.com/gz/safaripark/",gmap:"长隆野生动物世界南门"},
+    {name:"午餐：熊猫餐厅",lat:22.9998,lng:113.3188,type:"food",time:"13:00",desc:"园内顺路吃粤式套餐，快速补给后继续游览。",budget:"约 ¥70–120/人",dianpingKeyword:"长隆野生动物世界 熊猫餐厅",xhsKeyword:"长隆野生动物世界 熊猫餐厅"},
+    {name:"取行李 · 离园",lat:22.9947,lng:113.3193,type:"transport",time:"闭园前 30–45 分钟",desc:"必须回南门官方寄存柜取行李；不要卡闭园最后一分钟。",gmap:"长隆野生动物世界南门"},
+    {name:"白云机场酒店",lat:23.3924,lng:113.2988,type:"hotel",time:"20:30 左右",desc:"选择提供凌晨接送、明确对应航站楼的酒店；为次日 08:00 前航班服务。",detail:"到店即预约凌晨班车，前台再次确认集合点、车程和最晚退房方式。",gmap:"广州白云机场 酒店"}
+  ]},
+  {id:6,label:"10/5 返程",date:"10月5日 · 周一 · 08:00 前起飞",title:"机场酒店凌晨送机",color:"#c65364",route:"白云机场酒店 → 实际出发航站楼",transfers:[
+    {mode:"酒店凌晨接送",from:"白云机场酒店",to:"实际出发航站楼",duration:"约 10–20 分钟",note:"国内航班至少提前 2 小时到达；国际及港澳台航班至少提前 3 小时到达。"}
+  ],locations:[
+    {name:"酒店打包早餐 / 便利补给",lat:23.3924,lng:113.2988,type:"food",time:"按航班倒推",desc:"前一晚准备面包、香蕉和水，不等酒店正常早餐开餐。",budget:"¥15–30/人"},
+    {name:"凌晨接送到白云机场",lat:23.3924,lng:113.2988,type:"transport",time:"起飞前 2.5–3.5 小时",desc:"08:00 前起飞，具体出门时间必须按航班号、国内/国际属性和航站楼倒推。",gmap:"广州白云国际机场"},
+    {name:"白云机场返程",lat:23.3924,lng:113.2988,type:"transport",time:"08:00 前",desc:"完成值机和安检后返程；以登机牌航站楼与登机口为准。",gmap:"广州白云国际机场"}
+  ]}
+];
+
+function legacyOverviewContent(){
   return `
   <div class="hero">
     <div class="eyebrow">FINAL ROUTE · 3 位成人 · 2026 国庆</div>
@@ -292,6 +353,47 @@ function overviewContent(){
   </div>`;
 }
 
+function overviewContent(){
+  return`
+  <div class="hero">
+    <div class="eyebrow">FINAL ROUTE · 3 位成人 · 2026 国庆</div>
+    <h1>花都 · 古龙峡 · 英西峰林 · 长隆</h1>
+    <p class="subtitle">指定酒店、固定高铁和逐段车程都已写清；国庆按实时路况与排队情况灵活删减。</p>
+  </div>
+  <div class="info-grid">
+    <div class="info-card"><div class="label">时间</div><div class="value">9月30日晚抵达<br>10月5日 08:00 前返程</div></div>
+    <div class="info-card"><div class="label">核心交通</div><div class="value">广清城际 + 预约车<br>英德西高铁 + 电动车</div></div>
+    <div class="info-card"><div class="label">住宿链路</div><div class="value">花都 → 清新区 → 黄花镇<br>宝晶宫 → 机场酒店</div></div>
+    <div class="info-card"><div class="label">执行原则</div><div class="value">跨区车提前约<br>景区排队超时就删</div></div>
+  </div>
+  <div class="section-head">最终交通链路</div>
+  <div class="route-strip">
+    <div class="route-flow">
+      <span class="route-node">✈️ 白云机场</span><span class="route-arrow">→</span>
+      <span class="route-node">🏨 花都站</span><span class="route-arrow">→</span>
+      <span class="route-node">🚃 清城站</span><span class="route-arrow">→</span>
+      <span class="route-node">🌊 古龙峡</span><span class="route-arrow">→</span>
+      <span class="route-node">⛰️ 英西两天</span><span class="route-arrow">→</span>
+      <span class="route-node">♨️ 宝晶宫</span><span class="route-arrow">→</span>
+      <span class="route-node">🚄 广州南</span><span class="route-arrow">→</span>
+      <span class="route-node">🦁 长隆</span>
+    </div>
+    <div class="route-note">10月1日花都站乘广清城际到清城；清城、古龙峡、英西和宝晶宫之间采用出租车或预约车；10月4日固定乘 10:13–10:49 英德西至广州南高铁。</div>
+  </div>
+  <div class="section-head">逐日行程</div>
+  <div class="day-list">${DAYS.slice(1).map(d=>`<div class="card" onclick="go(${d.id})"><div class="name"><span class="dot" style="background:${d.color}"></span>${d.label} · ${d.title}</div><div class="desc">${d.date}</div></div>`).join("")}</div>
+  <div class="section-head">立即预订</div>
+  <div class="pay-summary"><h4>1 · 五晚住宿</h4>9/30 花都站附近；10/1 雅特斯酒店；10/2 英德英峯酒店；10/3 宝晶宫天鹅湖温泉酒店；10/4 白云机场附近且提供凌晨接送的酒店。</div>
+  <div class="pay-summary"><h4>2 · 门票与铁路</h4>古龙峡漂流票、洞天仙境、长隆官方票；10月4日高铁为 <strong>10:13 英德西 → 10:49 广州南</strong>。</div>
+  <div class="pay-summary"><h4>3 · 提前锁车辆</h4>清城站 → 雅特斯酒店、雅特斯酒店 ↔ 古龙峡、雅特斯酒店 → 英德英峯酒店、英峯酒店 → 宝晶宫酒店。订单写清三人和行李数。</div>
+  <div class="section-head">关键提醒</div>
+  <div class="pay-summary"><h4>图3酒店不是英西核心区</h4>10月3日白天仍在英西峰林，约16:00离开黄花镇，乘车约1.5–2小时转住宝晶宫，换取次日约17–25分钟到英德西站。</div>
+  <div class="pay-summary"><h4>长隆是下午版行程</h4>10:49才到广州南，预计11:30后入园。行李放南门官方寄存柜，必须在闭园前半小时取走；优先熊猫、考拉、亚洲象等核心区域。</div>
+  <div class="section-head">天气与复核</div>
+  <div class="pay-summary"><h4>出发前1–3天重查</h4>花都—清城城际班次、古龙峡开漂批次、洞天仙境开放、10:13高铁、预约车辆、长隆闭园时间、白云机场航站楼与凌晨接送。</div>`;
+}
+
+/* 地图已从页面移除，保留旧代码注释仅便于历史对照。
 const map=L.map("map",{center:[HOTEL.lat,HOTEL.lng],zoom:10,zoomControl:false,attributionControl:true});
 L.control.zoom({position:"topright"}).addTo(map);
 L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap &copy; CARTO"}).addTo(map);
@@ -350,6 +452,8 @@ function showDay(idx){
   if(coords.length)map.fitBounds(coords,{padding:[40,40],maxZoom:14});
 }
 
+*/
+function showDay(){}
 function payChips(pay){
   if(!pay)return"";
   let h='<div class="pays">';
@@ -387,10 +491,24 @@ function locCard(loc,dayIdx){
   if(loc.reserve)links+=`<a href="${loc.reserve}" target="_blank" rel="noreferrer" class="btn rsv">📅 官方/预订</a>`;
   return`<div class="tl-item"><div class="tl-dot ${dot}"></div><div class="card" onclick="if(!event.target.closest('.btn,.links'))toggle('${uid}')"><div class="time">${loc.time!=="—"?loc.time:"备选"}</div><div class="name">${bdg}${loc.name}</div><div class="desc">${loc.desc}</div>${loc.budget?`<div class="budget">${loc.budget}</div>`:""}${payChips(loc.pay)}<div class="links">${links}</div>${loc.detail?`<div class="details" id="${uid}">${loc.detail.replace(/\n/g,"<br>")}</div>`:""}</div></div>`;
 }
+function renderTransfers(transfers=[]){
+  if(!transfers.length)return"";
+  return`<div class="section-head">当天交通</div><div class="transport-list">${transfers.map(t=>`
+    <div class="transport-card">
+      <div class="transport-head"><div class="transport-mode">🚐 ${t.mode}</div><div class="transport-duration">${t.duration}</div></div>
+      <div class="transport-grid">
+        <div class="transport-place"><small>出发地点</small><strong>${t.from}</strong></div>
+        <div class="transport-arrow">→</div>
+        <div class="transport-place"><small>到达地点</small><strong>${t.to}</strong></div>
+      </div>
+      ${t.note?`<div class="transport-note">${t.note}</div>`:""}
+    </div>`).join("")}</div>`;
+}
 function renderDay(idx){
   const d=DAYS.find(x=>x.id===idx);if(!d)return"";
   const main=d.locations.filter(l=>l.time!=="—"),alt=d.locations.filter(l=>l.time==="—");
   let h=`<div class="day-head"><h2>${d.title}</h2><p>${d.date}</p></div><div class="route-bar"><strong>当天动线</strong>\n${d.route}</div>`;
+  h+=renderTransfers(d.transfers);
   if(main.length){h+='<div class="section-head">行程与三餐</div><div class="timeline">';main.forEach(l=>h+=locCard(l,idx));h+="</div>"}
   if(alt.length){h+='<div class="section-head">顺路备选</div><div class="timeline">';alt.forEach(l=>h+=locCard(l,idx));h+="</div>"}
   return h;
@@ -407,8 +525,7 @@ function go(idx){
   cur=idx;
   tabsEl.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",+t.dataset.day===idx));
   contentEl.innerHTML=idx===0?overviewContent():renderDay(idx);
-  showDay(idx);
-  window.scrollTo({top:document.getElementById("map").offsetHeight,behavior:"smooth"});
+  window.scrollTo({top:0,behavior:"smooth"});
   const tab=tabsEl.querySelector(`[data-day="${idx}"]`);if(tab)tab.scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"});
 }
 function toggle(id){const el=document.getElementById(id);if(el)el.classList.toggle("closed")}
@@ -433,7 +550,6 @@ function openAS(name,lat,lng,gmap){
 }
 function closeAS(){asOverlay.classList.remove("show")}
 contentEl.innerHTML=overviewContent();
-showDay(0);
 </script>
 </body>
 </html>
